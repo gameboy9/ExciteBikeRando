@@ -215,9 +215,9 @@
             this.lblRomImage.AutoSize = true;
             this.lblRomImage.Location = new System.Drawing.Point(12, 9);
             this.lblRomImage.Name = "lblRomImage";
-            this.lblRomImage.Size = new System.Drawing.Size(86, 13);
+            this.lblRomImage.Size = new System.Drawing.Size(116, 13);
             this.lblRomImage.TabIndex = 140;
-            this.lblRomImage.Text = "Golf ROM Image";
+            this.lblRomImage.Text = "Excitebike ROM Image";
             // 
             // txtFileName
             // 
