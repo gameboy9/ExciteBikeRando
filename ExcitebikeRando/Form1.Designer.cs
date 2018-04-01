@@ -36,10 +36,8 @@
             this.btnNewSeed = new System.Windows.Forms.Button();
             this.lblSeed = new System.Windows.Forms.Label();
             this.txtSeed = new System.Windows.Forms.TextBox();
-            this.btnCompareBrowse = new System.Windows.Forms.Button();
             this.lblCompareImage = new System.Windows.Forms.Label();
             this.txtCompare = new System.Windows.Forms.TextBox();
-            this.btnCompare = new System.Windows.Forms.Button();
             this.lblReqChecksum = new System.Windows.Forms.Label();
             this.lblRequired = new System.Windows.Forms.Label();
             this.lblSHAChecksum = new System.Windows.Forms.Label();
@@ -103,6 +101,7 @@
             this.txtFlags.Name = "txtFlags";
             this.txtFlags.Size = new System.Drawing.Size(200, 20);
             this.txtFlags.TabIndex = 147;
+            this.txtFlags.Leave += new System.EventHandler(this.determineChecks);
             // 
             // btnNewSeed
             // 
@@ -130,15 +129,6 @@
             this.txtSeed.Size = new System.Drawing.Size(100, 20);
             this.txtSeed.TabIndex = 138;
             // 
-            // btnCompareBrowse
-            // 
-            this.btnCompareBrowse.Location = new System.Drawing.Point(458, 33);
-            this.btnCompareBrowse.Name = "btnCompareBrowse";
-            this.btnCompareBrowse.Size = new System.Drawing.Size(75, 23);
-            this.btnCompareBrowse.TabIndex = 136;
-            this.btnCompareBrowse.Text = "Browse";
-            this.btnCompareBrowse.UseVisualStyleBackColor = true;
-            // 
             // lblCompareImage
             // 
             this.lblCompareImage.AutoSize = true;
@@ -155,23 +145,14 @@
             this.txtCompare.Size = new System.Drawing.Size(320, 20);
             this.txtCompare.TabIndex = 135;
             // 
-            // btnCompare
-            // 
-            this.btnCompare.Location = new System.Drawing.Point(458, 62);
-            this.btnCompare.Name = "btnCompare";
-            this.btnCompare.Size = new System.Drawing.Size(75, 23);
-            this.btnCompare.TabIndex = 137;
-            this.btnCompare.Text = "Compare";
-            this.btnCompare.UseVisualStyleBackColor = true;
-            // 
             // lblReqChecksum
             // 
             this.lblReqChecksum.AutoSize = true;
             this.lblReqChecksum.Location = new System.Drawing.Point(129, 88);
             this.lblReqChecksum.Name = "lblReqChecksum";
-            this.lblReqChecksum.Size = new System.Drawing.Size(241, 13);
+            this.lblReqChecksum.Size = new System.Drawing.Size(247, 13);
             this.lblReqChecksum.TabIndex = 144;
-            this.lblReqChecksum.Text = "8d2b8aea636a2239805c99744bf48c0b4df8d96e";
+            this.lblReqChecksum.Text = "2e9897846e54a4a9865e87de7517c6710bdec255";
             // 
             // lblRequired
             // 
@@ -385,10 +366,8 @@
             this.Controls.Add(this.btnNewSeed);
             this.Controls.Add(this.lblSeed);
             this.Controls.Add(this.txtSeed);
-            this.Controls.Add(this.btnCompareBrowse);
             this.Controls.Add(this.lblCompareImage);
             this.Controls.Add(this.txtCompare);
-            this.Controls.Add(this.btnCompare);
             this.Controls.Add(this.lblReqChecksum);
             this.Controls.Add(this.lblRequired);
             this.Controls.Add(this.lblSHAChecksum);
@@ -414,10 +393,8 @@
         private System.Windows.Forms.Button btnNewSeed;
         private System.Windows.Forms.Label lblSeed;
         private System.Windows.Forms.TextBox txtSeed;
-        private System.Windows.Forms.Button btnCompareBrowse;
         private System.Windows.Forms.Label lblCompareImage;
         private System.Windows.Forms.TextBox txtCompare;
-        private System.Windows.Forms.Button btnCompare;
         private System.Windows.Forms.Label lblReqChecksum;
         private System.Windows.Forms.Label lblRequired;
         private System.Windows.Forms.Label lblSHAChecksum;
