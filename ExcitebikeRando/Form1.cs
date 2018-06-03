@@ -210,6 +210,7 @@ namespace ExcitebikeRando
                 loadRom();
                 expandRom();
                 Random r1 = new Random(Convert.ToInt32(txtSeed.Text));
+                showSpeedAndScore();
                 changeLaps(r1);
                 randomizeBikeSpeed(r1);
                 if (chkObstacles.Checked) randomizeObstacles(r1);
@@ -222,7 +223,127 @@ namespace ExcitebikeRando
             {
                 MessageBox.Show("Error:  " + ex.Message);
             }
+        }
 
+        private void showSpeedAndScore()
+        {
+            // ... now take the speed in 0x94 + 0x90 and turn it into text, then place it into 0x31c
+            byte[] romPlugin = {
+                0xa9, 0x00,
+                0x8d, 0x1f, 0x03,
+                0x8d, 0x20, 0x03,
+                0x8d, 0x21, 0x03,
+                0xa5, 0x90,
+                0x8d, 0x11, 0x06,
+                0xa5, 0x94,
+                0x8d, 0x10, 0x06, // If high byte is 0...
+                0xf0, 0x13, // Jump to next digit
+                0xee, 0x20, 0x03, // Increase hundreds digit
+                0xad, 0x11, 0x06,
+                0x38,
+                0xe9, 0x64, // Decrease low byte by 100.
+                0x8d, 0x11, 0x06, // Store low byte
+                0xb0, 0xf2, // Skip reduction if we didn't underflow
+                0xce, 0x10, 0x06, // Decrease high byte
+                0xd0, 0xed, // If still greater than 1, repeat the process
+                0xad, 0x11, 0x06,
+                0xc9, 0x64,
+                0x90, 0x0e, // If less than 100, skip.
+                0xee, 0x20, 0x03, // Increase hundreds digit
+                0xad, 0x11, 0x06,
+                0x38,
+                0xe9, 0x64, // Decrease low byte by 100.
+                0x8d, 0x11, 0x06, // Store low byte
+                0xd0, 0xee, // Repeat comparison
+                // Repeat for 10s
+                0xc9, 0x0a,
+                0x90, 0x0e, // If less than 10, skip.
+                0xee, 0x21, 0x03, // Increase tens digit
+                0xad, 0x11, 0x06,
+                0x38,
+                0xe9, 0x0a, // Decrease low byte by 10.
+                0x8d, 0x11, 0x06, // Store low byte
+                0xd0, 0xee, // Repeat comparison
+                0xad, 0x20, 0x03,
+                0xc9, 0x0a,
+                0x90, 0x09, // If the hundreds are less than 10, skip.  Otherwise, have to set thousands.
+                0x38,
+                0xe9, 0x0a,
+                0x8d, 0x20, 0x03,
+                0xee, 0x1f, 0x03,
+                // And now scoring!
+                0x18,
+                0xa5, 0x94,
+                0x0a,
+                0x65, 0x94,
+                0x6d, 0x2f, 0x03,
+                0x8d, 0x2f, 0x03,
+                0xa5, 0x90,
+                0xc9, 0x80,
+                0x90, 0x03,
+                0xee, 0x2f, 0x03,
+                0xa2, 0x07,
+                0xbd, 0x28, 0x03,
+                0xc9, 0x0a,
+                0x90, 0x08,
+                0xfe, 0x27, 0x03,
+                0x38,
+                0xe9, 0x0a,
+                0xd0, 0xf4,
+                0x9d, 0x28, 0x03,
+                0xca,
+                0xd0, 0xeb,
+                0x20, 0xf4, 0xd0,
+                0x60,
+            };
+
+            for (int lnI = 0; lnI < romPlugin.Length; lnI++)
+                romData[0x910 + lnI] = romPlugin[lnI];
+
+            romPlugin = new byte[] { 0x20, 0x00, 0x89 };
+            for (int lnI = 0; lnI < romPlugin.Length; lnI++)
+                romData[0x5189 + lnI] = romPlugin[lnI];
+
+            romPlugin = new byte[]
+            {
+                // First carry over what we're skipping... whatever that is
+                0xa6, 0x45,
+                0xbd, 0xf6, 0xc0,
+                0x85, 0x00,
+                0xbd, 0x11, 0xc1,
+                0x85, 0x01,
+
+                0xa9, 0x23,
+                0x8d, 0x1c, 0x03,
+                0xa9, 0x96,
+                0x8d, 0x1d, 0x03,
+                0xa9, 0x07,
+                0x8d, 0x1e, 0x03,
+
+                0xa9, 0x35,
+                0x8d, 0x22, 0x03,
+                0xa9, 0x14,
+                0x8d, 0x23, 0x03,
+                0xa9, 0x19,
+                0x8d, 0x24, 0x03,
+                0xa9, 0x11,
+                0x8d, 0x25, 0x03,
+
+                0xa9, 0x23,
+                0x8d, 0x26, 0x03,
+                0xa9, 0x84,
+                0x8d, 0x27, 0x03,
+                0xa9, 0x08,
+                0x8d, 0x28, 0x03,
+
+                0x4c, 0x8b, 0xc2 // Then jump back to where we were before.
+            };
+            for (int lnI = 0; lnI < romPlugin.Length; lnI++)
+                romData[0xa10 + lnI] = romPlugin[lnI];
+
+            romPlugin = new byte[] { 0x4c, 0x00, 0x8a };
+            for (int lnI = 0; lnI < romPlugin.Length; lnI++)
+                romData[0x428f + lnI] = romPlugin[lnI];
         }
 
         private void changeLaps(Random r1)
@@ -587,7 +708,7 @@ namespace ExcitebikeRando
                 }
 
                 romData[obstPointer] = 0x40;
-                romData[obstPointer + 1] = (byte)(1 + (r1.Next() % 30));
+                romData[obstPointer + 1] = (byte)(4 + (r1.Next() % 30));
                 romData[obstPointer + 2] = 0x09;
 
                 if (lnI < 5)
@@ -654,7 +775,7 @@ namespace ExcitebikeRando
                         break;
                     case 7:
                         bikeSpeed1 = 800 + ScaleValue(400, 2.0, 1.0, r1);
-                        bikeSpeed2 = 848 + ScaleValue(416, 2.0, 1.0, r1);
+                        bikeSpeed2 = 832 + ScaleValue(416, 2.0, 1.0, r1);
                         break;
 
                 }
