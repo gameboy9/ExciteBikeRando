@@ -45,7 +45,6 @@
             this.btnBrowse = new System.Windows.Forms.Button();
             this.lblRomImage = new System.Windows.Forms.Label();
             this.txtFileName = new System.Windows.Forms.TextBox();
-            this.chkBikeSpeed = new System.Windows.Forms.CheckBox();
             this.chkObstacles = new System.Windows.Forms.CheckBox();
             this.chkVSTracks = new System.Windows.Forms.CheckBox();
             this.chkVSOpponents = new System.Windows.Forms.CheckBox();
@@ -55,11 +54,12 @@
             this.cboExcitebikeLaps = new System.Windows.Forms.ComboBox();
             this.cboBikeSpeed = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.chkLoopTrack1 = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // cmdRandomize
             // 
-            this.cmdRandomize.Location = new System.Drawing.Point(437, 248);
+            this.cmdRandomize.Location = new System.Drawing.Point(437, 271);
             this.cmdRandomize.Name = "cmdRandomize";
             this.cmdRandomize.Size = new System.Drawing.Size(96, 23);
             this.cmdRandomize.TabIndex = 154;
@@ -70,7 +70,7 @@
             // lblStatus
             // 
             this.lblStatus.AutoSize = true;
-            this.lblStatus.Location = new System.Drawing.Point(12, 309);
+            this.lblStatus.Location = new System.Drawing.Point(12, 316);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(0, 13);
             this.lblStatus.TabIndex = 153;
@@ -207,17 +207,6 @@
             this.txtFileName.Size = new System.Drawing.Size(320, 20);
             this.txtFileName.TabIndex = 133;
             // 
-            // chkBikeSpeed
-            // 
-            this.chkBikeSpeed.AutoSize = true;
-            this.chkBikeSpeed.Location = new System.Drawing.Point(15, 196);
-            this.chkBikeSpeed.Name = "chkBikeSpeed";
-            this.chkBikeSpeed.Size = new System.Drawing.Size(137, 17);
-            this.chkBikeSpeed.TabIndex = 151;
-            this.chkBikeSpeed.Text = "Randomize Bike Speed";
-            this.chkBikeSpeed.UseVisualStyleBackColor = true;
-            this.chkBikeSpeed.CheckedChanged += new System.EventHandler(this.determineFlags);
-            // 
             // chkObstacles
             // 
             this.chkObstacles.AutoSize = true;
@@ -254,7 +243,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(250, 199);
+            this.label1.Location = new System.Drawing.Point(250, 222);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(76, 13);
             this.label1.TabIndex = 157;
@@ -263,7 +252,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(250, 221);
+            this.label2.Location = new System.Drawing.Point(250, 244);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(78, 13);
             this.label2.TabIndex = 158;
@@ -286,7 +275,7 @@
             "Random",
             "Random Low (1-5)",
             "Random High (5-9)"});
-            this.cboChallengeLaps.Location = new System.Drawing.Point(342, 195);
+            this.cboChallengeLaps.Location = new System.Drawing.Point(342, 218);
             this.cboChallengeLaps.Name = "cboChallengeLaps";
             this.cboChallengeLaps.Size = new System.Drawing.Size(121, 21);
             this.cboChallengeLaps.TabIndex = 159;
@@ -309,7 +298,7 @@
             "Random",
             "Random Low (1-5)",
             "Random High (5-9)"});
-            this.cboExcitebikeLaps.Location = new System.Drawing.Point(342, 218);
+            this.cboExcitebikeLaps.Location = new System.Drawing.Point(342, 241);
             this.cboExcitebikeLaps.Name = "cboExcitebikeLaps";
             this.cboExcitebikeLaps.Size = new System.Drawing.Size(121, 21);
             this.cboExcitebikeLaps.TabIndex = 160;
@@ -328,7 +317,7 @@
             "Random",
             "Random Slow",
             "Random Fast"});
-            this.cboBikeSpeed.Location = new System.Drawing.Point(104, 217);
+            this.cboBikeSpeed.Location = new System.Drawing.Point(104, 194);
             this.cboBikeSpeed.Name = "cboBikeSpeed";
             this.cboBikeSpeed.Size = new System.Drawing.Size(121, 21);
             this.cboBikeSpeed.TabIndex = 163;
@@ -337,17 +326,28 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(12, 221);
+            this.label4.Location = new System.Drawing.Point(12, 198);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(62, 13);
             this.label4.TabIndex = 161;
             this.label4.Text = "Bike Speed";
             // 
+            // chkLoopTrack1
+            // 
+            this.chkLoopTrack1.AutoSize = true;
+            this.chkLoopTrack1.Location = new System.Drawing.Point(253, 195);
+            this.chkLoopTrack1.Name = "chkLoopTrack1";
+            this.chkLoopTrack1.Size = new System.Drawing.Size(185, 17);
+            this.chkLoopTrack1.TabIndex = 164;
+            this.chkLoopTrack1.Text = "Loop back to track 1 after track 5";
+            this.chkLoopTrack1.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(548, 345);
+            this.ClientSize = new System.Drawing.Size(548, 350);
+            this.Controls.Add(this.chkLoopTrack1);
             this.Controls.Add(this.cboBikeSpeed);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.cboExcitebikeLaps);
@@ -358,7 +358,6 @@
             this.Controls.Add(this.chkVSTracks);
             this.Controls.Add(this.cmdRandomize);
             this.Controls.Add(this.lblStatus);
-            this.Controls.Add(this.chkBikeSpeed);
             this.Controls.Add(this.chkColors);
             this.Controls.Add(this.chkObstacles);
             this.Controls.Add(this.lblFlags);
@@ -402,7 +401,6 @@
         private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.Label lblRomImage;
         private System.Windows.Forms.TextBox txtFileName;
-        private System.Windows.Forms.CheckBox chkBikeSpeed;
         private System.Windows.Forms.CheckBox chkObstacles;
         private System.Windows.Forms.CheckBox chkVSTracks;
         private System.Windows.Forms.CheckBox chkVSOpponents;
@@ -412,6 +410,7 @@
         private System.Windows.Forms.ComboBox cboExcitebikeLaps;
         private System.Windows.Forms.ComboBox cboBikeSpeed;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.CheckBox chkLoopTrack1;
     }
 }
 

@@ -129,7 +129,7 @@ namespace ExcitebikeRando
                 return;
 
             string flags = "";
-            int number = (chkObstacles.Checked ? 1 : 0) + (chkColors.Checked ? 2 : 0) + (chkBikeSpeed.Checked ? 4 : 0) + (chkVSTracks.Checked ? 8 : 0) + (chkVSOpponents.Checked ? 16 : 0);
+            int number = (chkObstacles.Checked ? 1 : 0) + (chkColors.Checked ? 2 : 0) + (chkVSTracks.Checked ? 4 : 0) + (chkVSOpponents.Checked ? 8 : 0) + (chkLoopTrack1.Checked ? 16 : 0);
             flags += convertIntToChar(number);
 
             flags += cboChallengeLaps.SelectedIndex < 9 ? (cboChallengeLaps.SelectedIndex + 1).ToString() : cboChallengeLaps.SelectedIndex == 9 ? "R" : cboChallengeLaps.SelectedIndex == 10 ? "L" : "H";
@@ -147,9 +147,9 @@ namespace ExcitebikeRando
             int number = convertChartoInt(Convert.ToChar(flags.Substring(0, 1)));
             chkObstacles.Checked = (number % 2 == 1);
             chkColors.Checked = (number % 4 >= 2);
-            chkBikeSpeed.Checked = (number % 8 >= 4);
-            chkVSTracks.Checked = (number % 16 >= 8);
-            chkVSOpponents.Checked = (number % 32 >= 16);
+            chkVSTracks.Checked = (number % 8 >= 4);
+            chkVSOpponents.Checked = (number % 16 >= 8);
+            chkLoopTrack1.Checked = (number % 32 >= 16);
 
             string laps = flags.Substring(1, 1);
             if (laps == "R")
@@ -217,12 +217,49 @@ namespace ExcitebikeRando
                 if (chkColors.Checked) randomizeColors(r1);
                 if (chkVSTracks.Checked) createVSSetup();
                 if (chkVSOpponents.Checked) alternateOpponents();
+                if (chkLoopTrack1.Checked) loopToTrack1();
                 saveRom();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Error:  " + ex.Message);
             }
+        }
+
+        private void loopToTrack1()
+        {
+            byte[] romPlugin =
+            {
+                0xa5, 0x43,
+                0xc9, 0x04,
+                0xd0, 0x17,
+                0xa9, 0x00,
+                0x85, 0x43,
+                0xee, 0xf3, 0x03,
+                0xad, 0xf3, 0x03,
+                0x4a,
+                0xb0, 0x0e,
+                0xad, 0xf8, 0x03,
+                0x4a,
+                0xf0, 0x08,
+                0x8d, 0xf8, 0x03,
+                0x38,
+                0xb0, 0x02,
+                0xe6, 0x43,
+                0x60
+            };
+
+            for (int lnI = 0; lnI < romPlugin.Length; lnI++)
+                romData[0xb10 + lnI] = romPlugin[lnI];
+
+            byte[] romPlugin2 =
+            {
+                0x20, 0x00, 0x8b,
+                0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea, 0xea
+            };
+
+            for (int lnI = 0; lnI < romPlugin2.Length; lnI++)
+                romData[0x4b60 + lnI] = romPlugin2[lnI];
         }
 
         private void showSpeedAndScore()
@@ -271,30 +308,32 @@ namespace ExcitebikeRando
                 0xe9, 0x0a,
                 0x8d, 0x20, 0x03,
                 0xee, 0x1f, 0x03,
-                // And now scoring!
-                0x18,
-                0xa5, 0x94,
-                0x0a,
-                0x65, 0x94,
-                0x6d, 0x2f, 0x03,
-                0x8d, 0x2f, 0x03,
-                0xa5, 0x90,
-                0xc9, 0x80,
-                0x90, 0x03,
-                0xee, 0x2f, 0x03,
-                0xa2, 0x07,
-                0xbd, 0x28, 0x03,
-                0xc9, 0x0a,
-                0x90, 0x08,
-                0xfe, 0x27, 0x03,
-                0x38,
-                0xe9, 0x0a,
-                0xd0, 0xf4,
-                0x9d, 0x28, 0x03,
-                0xca,
-                0xd0, 0xeb,
-                0x20, 0xf4, 0xd0,
-                0x60,
+                // And now scoring!  30 points / each 64 KPH, 10 points if remainder is > 32 KPH.
+                0xa5, 0xfc, // Load 0xfc - the pause state
+                0xf0, 0x2c, // BEQ +44 bytes
+                0x18, // Clear carry
+                0xa5, 0x94, // LDA $94
+                0x0a, // ASL
+                0x65, 0x94, // ADC $94 (so triple)
+                0x6d, 0x2f, 0x03, // ADC $032F
+                0x8d, 0x2f, 0x03, // STA $032F
+                0xa5, 0x90, // LDA $90
+                0xc9, 0x80, // CMP #80
+                0x90, 0x03, // BCC +03
+                0xee, 0x2f, 0x03, // INC $032F
+                0xa2, 0x07, // LDX $07 <------
+                0xbd, 0x28, 0x03, // LDA $0328, X <------ (BNE -21/-12)
+                0xc9, 0x0a, // CMP #0A
+                0x90, 0x08, // BCC +08
+                0xfe, 0x27, 0x03, // INC $0327
+                0x38, // Set carry
+                0xe9, 0x0a, // SBC #0A
+                0xd0, 0xf4, // BNE -12 bytes
+                0x9d, 0x28, 0x03, // STA $0328, X <------ (BCC +08)
+                0xca, // Decrease X
+                0xd0, 0xeb, // BNE -21 bytes
+                0x20, 0xf4, 0xd0, // JSR $D0F4
+                0x60, // RTS
             };
 
             for (int lnI = 0; lnI < romPlugin.Length; lnI++)
@@ -401,47 +440,27 @@ namespace ExcitebikeRando
         private void createVSSetup()
         {
             // This will alternate races between Challenge and Excitebike.  So you always qualify before the actual race.
-            if (chkBikeSpeed.Checked)
-            {
-                byte[] bytesToAdd = {
-                    0x20, 0x80, 0x80,
-                    0xa5, 0x46,
-                    0xd0, 0x05,
-                    0xa9, 0x01,
-                    0x85, 0x46,
-                    0x60,
-                    0xa9, 0x00,
-                    0x85, 0x46,
-                    0xa9, 0x01,
-                    0x85, 0x4b,
-                    0x60
-                };
+            byte[] bytesToAdd = {
+                0x20, 0x80, 0x80, // JSR $8080 - The bike speed loading mechanism
+                0xa5, 0x46, // LDA $46
+                0xd0, 0x05, // BNE +5 bytes (if in Excitebike mode...)
+                0xa9, 0x01, // LDA #01 - If in qualify mode, make it excitebike
+                0x85, 0x46, // STA $46
+                0x60, // RTS
+                0xa9, 0x00, // Otherwise, make it qualify mode
+                0x85, 0x46, // STA $46
+                0xa9, 0x01, // LDA #01
+                0x85, 0x4b, // STA $4B
+                0x60 // RTS
+            };
 
-                for (int lnI = 0; lnI < bytesToAdd.Length; lnI++)
-                    romData[0x50 + lnI] = bytesToAdd[lnI];
-            } else
-            {
-                byte[] bytesToAdd = {
-                    0xa5, 0x46,
-                    0xd0, 0x05,
-                    0xa9, 0x01,
-                    0x85, 0x46,
-                    0x60,
-                    0xa9, 0x00,
-                    0x85, 0x46,
-                    0xa9, 0x01,
-                    0x85, 0x4b,
-                    0x60
-                };
+            for (int lnI = 0; lnI < bytesToAdd.Length; lnI++)
+                romData[0x50 + lnI] = bytesToAdd[lnI];
 
-                for (int lnI = 0; lnI < bytesToAdd.Length; lnI++)
-                    romData[0x50 + lnI] = bytesToAdd[lnI];
-            }
-
-            romData[0x4b7d] = 0x20;
+            romData[0x4b7d] = 0x20; // JSR $8040
             romData[0x4b7e] = 0x40;
             romData[0x4b7f] = 0x80;
-            romData[0x4b80] = 0xea;
+            romData[0x4b80] = 0xea; // NOP
         }
 
         private void alternateOpponents()
@@ -496,7 +515,7 @@ namespace ExcitebikeRando
                 double record2 = 3.0 + (romData[trackObstaclePointers[lnI] + 2] * 0.03);
 
                 int obstPointer = trackObstaclePointers[lnI] + 4;
-                int obstacleBytes = (lnI == 0 ? 120 : lnI == 1 ? 160 : lnI == 2 ? 200 : 240);
+                int obstacleBytes = (lnI == 0 ? 120 : lnI == 1 ? 160 : lnI == 2 ? 200 : 236);
                 while (obstacleBytes > 0)
                 {
                     int ebObstacle = (r1.Next() % 4 == 0 ? 0x80 : 0x00);
@@ -513,7 +532,7 @@ namespace ExcitebikeRando
                     int obstacle = (r1.Next() % 20);
                     switch (obstacle)
                     {
-                        case 0:
+                        case 0: // A
                             romData[obstPointer + 2] = (byte)(0x08 + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -521,7 +540,7 @@ namespace ExcitebikeRando
                             record2 += .6;
                             record1 += (ebObstacle == 0x80 ? 0 : 0.6);
                             break;
-                        case 1:
+                        case 1: // B
                             romData[obstPointer + 2] = (byte)(0x07 + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -529,7 +548,7 @@ namespace ExcitebikeRando
                             record2 += .6;
                             record1 += (ebObstacle == 0x80 ? 0 : 0.6);
                             break;
-                        case 2:
+                        case 2: // C
                             romData[obstPointer + 2] = (byte)(0x05 + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -537,7 +556,7 @@ namespace ExcitebikeRando
                             record2 += .6;
                             record1 += (ebObstacle == 0x80 ? 0 : 0.6);
                             break;
-                        case 3:
+                        case 3: // D
                             romData[obstPointer + 2] = (byte)(0x01 + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -545,7 +564,7 @@ namespace ExcitebikeRando
                             record2 += .6;
                             record1 += (ebObstacle == 0x80 ? 0 : 0.6);
                             break;
-                        case 4:
+                        case 4: // E
                             romData[obstPointer + 2] = (byte)(0x0b + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -553,7 +572,7 @@ namespace ExcitebikeRando
                             record2 += .6;
                             record1 += (ebObstacle == 0x80 ? 0 : 0.6);
                             break;
-                        case 5:
+                        case 5: // F
                             romData[obstPointer + 2] = (byte)(0x06 + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -561,7 +580,7 @@ namespace ExcitebikeRando
                             record2 += .6;
                             record1 += (ebObstacle == 0x80 ? 0 : 0.6);
                             break;
-                        case 6:
+                        case 6: // G
                             romData[obstPointer + 2] = (byte)(0x0a + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -569,7 +588,7 @@ namespace ExcitebikeRando
                             record2 += .6;
                             record1 += (ebObstacle == 0x80 ? 0 : 0.6);
                             break;
-                        case 7:
+                        case 7: // H
                             romData[obstPointer + 2] = (byte)(0x0e + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -577,7 +596,7 @@ namespace ExcitebikeRando
                             record2 += 0;
                             record1 += 0;
                             break;
-                        case 8:
+                        case 8: // I
                             romData[obstPointer + 2] = (byte)(0x02 + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -585,7 +604,7 @@ namespace ExcitebikeRando
                             record2 += .25;
                             record1 += (ebObstacle == 0x80 ? 0 : 0.25);
                             break;
-                        case 9:
+                        case 9: // J
                             romData[obstPointer + 2] = (byte)(0x04 + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -593,7 +612,7 @@ namespace ExcitebikeRando
                             record2 += .25;
                             record1 += (ebObstacle == 0x80 ? 0 : 0.25);
                             break;
-                        case 10:
+                        case 10: // K
                             romData[obstPointer + 2] = (byte)(0x0c + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -601,7 +620,7 @@ namespace ExcitebikeRando
                             record2 += .25;
                             record1 += (ebObstacle == 0x80 ? 0 : 0.25);
                             break;
-                        case 11:
+                        case 11: // L
                             romData[obstPointer + 2] = (byte)(0x0d + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -609,7 +628,7 @@ namespace ExcitebikeRando
                             record2 += .25;
                             record1 += (ebObstacle == 0x80 ? 0 : 0.25);
                             break;
-                        case 12:
+                        case 12: // M
                             romData[obstPointer + 2] = (byte)(0x0f + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -617,7 +636,7 @@ namespace ExcitebikeRando
                             record2 += 0;
                             record1 += 0;
                             break;
-                        case 13:
+                        case 13: // N
                             romData[obstPointer + 2] = (byte)(0x10 + ebObstacle);
                             obstPointer += 3;
                             obstacleBytes -= 3;
@@ -625,7 +644,7 @@ namespace ExcitebikeRando
                             record2 += 0;
                             record1 += 0;
                             break;
-                        case 14:
+                        case 14: // O
                             romData[obstPointer + 2] = 0x12;
                             romData[obstPointer + 3] = 0x42;
                             romData[obstPointer + 4] = (byte)(4 + (r1.Next() % 30));
@@ -638,7 +657,7 @@ namespace ExcitebikeRando
                             obstacleBytes -= 6;
 
                             break;
-                        case 15:
+                        case 15: // P
                             romData[obstPointer + 2] = 0x13;
                             romData[obstPointer + 3] = 0x43;
                             romData[obstPointer + 4] = (byte)(4 + (r1.Next() % 30));
@@ -651,7 +670,7 @@ namespace ExcitebikeRando
                             obstacleBytes -= 6;
 
                             break;
-                        case 16:
+                        case 16: // Q
                             romData[obstPointer + 2] = 0x11;
                             romData[obstPointer + 3] = 0x46;
                             romData[obstPointer + 4] = (byte)(4 + (r1.Next() % 20));
@@ -664,37 +683,42 @@ namespace ExcitebikeRando
                             obstacleBytes -= 6;
 
                             break;
-                        case 17:
+                        case 17: // R
+                            byte distance1 = (byte)(0x02 + ((speed / 280) * (speed / 280)) + (r1.Next() % 7));
+                            byte distance2 = (byte)(0x02 + ((speed / 280) * (speed / 280)) + (r1.Next() % 7));
                             romData[obstPointer + 2] = 0x15;
                             romData[obstPointer + 3] = 0x41;
-                            romData[obstPointer + 4] = (byte)(0x03 + (r1.Next() % 13));
+                            romData[obstPointer + 4] = distance1;
                             romData[obstPointer + 5] = 0x21;
                             romData[obstPointer + 6] = 0x45;
-                            romData[obstPointer + 7] = (byte)(0x03 + (r1.Next() % 13));
+                            romData[obstPointer + 7] = distance2;
                             romData[obstPointer + 8] = 0x23;
                             obstPointer += 9;
                             obstacleBytes -= 9;
 
-                            record2 += 5;
-                            record1 += 5;
+                            record2 += 2.2 + (.04 * (distance1 + distance2));
+                            record1 += 2.2 + (.04 * (distance1 + distance2));
                             break;
-                        case 18:
+                        case 18: // S
+                            byte distance4 = (byte)(0x02 + ((speed / 280) * (speed / 280)) + (r1.Next() % 7));
+                            byte distance5 = (byte)(0x02 + ((speed / 280) * (speed / 280)) + (r1.Next() % 7));
+                            byte distance6 = (byte)(0x02 + ((speed / 280) * (speed / 280)) + (r1.Next() % 7));
                             romData[obstPointer + 2] = 0x14;
                             romData[obstPointer + 3] = 0x44;
-                            romData[obstPointer + 4] = (byte)(0x02 + (r1.Next() % 10));
+                            romData[obstPointer + 4] = distance4;
                             romData[obstPointer + 5] = 0x1e;
                             romData[obstPointer + 6] = 0x44;
-                            romData[obstPointer + 7] = (byte)(0x02 + (r1.Next() % 10));
+                            romData[obstPointer + 7] = distance5;
                             romData[obstPointer + 8] = 0x1e;
                             romData[obstPointer + 9] = 0x44;
-                            romData[obstPointer + 10] = (byte)(0x02 + (r1.Next() % 10));
+                            romData[obstPointer + 10] = distance6;
                             romData[obstPointer + 11] = 0x1f;
                             romData[obstPointer + 12] = 0x1b;
                             obstPointer += 13;
                             obstacleBytes -= 13;
 
-                            record2 += 3;
-                            record1 += 3;
+                            record2 += 1.5 + (.04 * (distance4 + distance5 + distance6));
+                            record1 += 1.5 + (.04 * (distance4 + distance5 + distance6));
                             break;
                         case 19: // No obstacle
                             romData[obstPointer + 2] = 0x31;
@@ -714,7 +738,7 @@ namespace ExcitebikeRando
                 if (lnI < 5)
                 {
                     record1 *= (romData[0x20 + lnI] * 1.25);
-                    record2 *= (romData[0x28 + lnI] * 1.35);
+                    record2 *= (romData[0x28 + lnI] * (chkVSOpponents.Checked ? 1.35 : 1.25));
 
                     record1 *= 840 / speed;
                     record2 *= 840 / speed;
@@ -796,23 +820,25 @@ namespace ExcitebikeRando
                 romData[byteToUse + 15] = (byte)(bikeSpeed2 / 256);
             }
 
+            // Change max bike speed pointers to ones stored in RAM:  $0600 and $0602
             romData[0x4db6] = romData[0x4e59] = romData[0x4e5e] = 0x00; // 0x60;
             romData[0x4db7] = romData[0x4e5a] = romData[0x4e5f] = 0x06; // 0x80;
             romData[0x4dad] = romData[0x4e4f] = romData[0x4e63] = 0x02; // 0x62;
             romData[0x4dae] = romData[0x4e50] = romData[0x4e64] = 0x06; // 0x80;
 
+            // Get bike speeds based on track number
             byte[] bytesToAdd =
             {
-                0xa6, 0x43,
-                0xbd, 0x60, 0x80,
-                0x8d, 0x00, 0x06,
-                0xbd, 0x65, 0x80,
-                0x8d, 0x02, 0x06,
-                0xbd, 0x6a, 0x80,
-                0x8d, 0x01, 0x06,
-                0xbd, 0x6f, 0x80,
-                0x8d, 0x03, 0x06,
-                0x60
+                0xa6, 0x43, // LDX $43
+                0xbd, 0x60, 0x80, // LDA $8060, X
+                0x8d, 0x00, 0x06, // STA $0600
+                0xbd, 0x65, 0x80, // LDA $8065, X
+                0x8d, 0x02, 0x06, // STA $0602
+                0xbd, 0x6a, 0x80, // LDA $806A, X
+                0x8d, 0x01, 0x06, // STA $0601
+                0xbd, 0x6f, 0x80, // LDA $806F, X
+                0x8d, 0x03, 0x06, // STA $0603
+                0x60 // RTS
             };
 
             for (int lnI = 0; lnI < bytesToAdd.Length; lnI++)
@@ -820,10 +846,10 @@ namespace ExcitebikeRando
 
             bytesToAdd = new byte[]
             {
-                0xa5, 0x42,
-                0x85, 0x43,
-                0x20, 0x80, 0x80,
-                0x60
+                0xa5, 0x42, // LDA $42
+                0x85, 0x43, // STA $43
+                0x20, 0x80, 0x80, // JSR $8080
+                0x60 // RTS
             };
             for (int lnI = 0; lnI < bytesToAdd.Length; lnI++)
                 romData[0xb0 + lnI] = bytesToAdd[lnI];
